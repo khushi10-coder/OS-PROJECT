@@ -22,53 +22,41 @@ Build a **local, offline Linux system** that automatically:
 
 ### Development Phases
 
-```text
-┌──────────────────────────────┐
-│ PHASE 1: CORE LINUX SYSTEM   │
-│ C + Linux + SQLite + inotify │
-└──────────────┬───────────────┘
-               ↓
-┌──────────────────────────────┐
-│ PHASE 2: AI INTELLIGENCE     │
-│ Python + ML + Analysis       │
-└──────────────────────────────┘
+```mermaid
+flowchart TD
+    A["PHASE 1: CORE LINUX SYSTEM<br/>C + Linux + SQLite + inotify"]
+    --> B["PHASE 2: AI INTELLIGENCE<br/>Python + ML + Analysis"]
 ```
 
 ---
 
 # 🏗️ System Architecture
 
-```text
-                    USER
-                     │
-                     ▼
-              ┌─────────────┐
-              │ CLI / MENU  │
-              └──────┬──────┘
-                     ▼
-          ┌──────────────────────┐
-          │      CORE C SYSTEM   │
-          ├──────────────────────┤
-          │ File Management      │
-          │ Backup Engine        │
-          │ File Monitoring      │
-          │ File Classification  │
-          │ Duplicate Detection  │
-          └──────────┬───────────┘
-                     │
-          ┌──────────┼──────────┐
-          ▼          ▼          ▼
-      Linux FS    inotify    SHA-256
-                     │
-                     ▼
-              ┌─────────────┐
-              │   SQLite    │
-              └──────┬──────┘
-                     ▼
-              ┌─────────────┐
-              │  AI LAYER   │
-              │   Python    │
-              └─────────────┘
+```mermaid
+flowchart TD
+    U["USER"] --> CLI["CLI / MENU"]
+
+    CLI --> CORE["CORE C SYSTEM"]
+
+    CORE --> FM["File Management"]
+    CORE --> BE["Backup Engine"]
+    CORE --> MON["File Monitoring"]
+    CORE --> FC["File Classification"]
+    CORE --> DD["Duplicate Detection"]
+
+    FM --> FS["Linux File System"]
+    BE --> FS
+    MON --> IN["inotify"]
+    DD --> SHA["SHA-256"]
+
+    IN --> DB["SQLite"]
+    SHA --> DB
+
+    DB --> AI["AI LAYER<br/>Python"]
+
+    AI --> BP["Backup Priority"]
+    AI --> AD["Anomaly Detection"]
+    AI --> RA["Redundancy Analysis"]
 ```
 
 ---
@@ -91,31 +79,16 @@ Build a **local, offline Linux system** that automatically:
 
 # 💾 Backup Flow
 
-```text
-       START
-         │
-         ▼
-   Select Source
-         │
-         ▼
- Select Backup Location
-         │
-         ▼
-    Full Backup
-         │
-         ▼
-   Store Metadata
-         │
-         ▼
-   Monitor Changes
-         │
-         ▼
- New / Modified File?
-      │         │
-     YES        NO
-      │          │
-      ▼          ▼
-   BACKUP      IGNORE
+```mermaid
+flowchart TD
+    A["START"] --> B["Select Source"]
+    B --> C["Select Backup Location"]
+    C --> D["Full Backup"]
+    D --> E["Store Metadata"]
+    E --> F["Monitor Changes"]
+    F --> G{"New / Modified File?"}
+    G -->|YES| H["BACKUP"]
+    G -->|NO| I["IGNORE"]
 ```
 
 ### Backup Types
@@ -132,16 +105,11 @@ Build a **local, offline Linux system** that automatically:
 
 The system uses Linux **`inotify`** to monitor selected directories.
 
-```text
-File Event
-    │
-    ▼
-  inotify
-    │
-    ▼
- C Monitor
-    │
-    └──→ Backup Decision
+```mermaid
+flowchart LR
+    A["File Event"] --> B["inotify"]
+    B --> C["C Monitor"]
+    C --> D["Backup Decision"]
 ```
 
 ### Monitored Events
@@ -171,6 +139,20 @@ Files are categorized according to their extensions.
 | `.c`                    | Source Code   |
 | Unknown                 | Other         |
 
+### Classification Flow
+
+```mermaid
+flowchart TD
+    A["File"] --> B["Read Extension"]
+    B --> C{"Known Extension?"}
+
+    C -->|YES| D["Assign Category"]
+    C -->|NO| E["Other"]
+
+    D --> F["Store Classification"]
+    E --> F
+```
+
 ---
 
 # ⭐ Project Folder Registry
@@ -194,20 +176,21 @@ Users can mark important folders for special treatment.
 
 Exact duplicate files are detected using **SHA-256 hashes**.
 
-```text
-report.pdf
-Hash → ABC123
+```mermaid
+flowchart TD
+    A["report.pdf"] --> B["SHA-256 Hash"]
+    C["report_copy.pdf"] --> D["SHA-256 Hash"]
 
-report_copy.pdf
-Hash → ABC123
-        │
-        ▼
- DUPLICATE DETECTED
-        │
-        ▼
-   User Decision
-    /    |     \
- Keep  Delete  Quarantine
+    B --> E{"Same Hash?"}
+    D --> E
+
+    E -->|YES| F["DUPLICATE DETECTED"]
+    E -->|NO| G["Unique File"]
+
+    F --> H["User Decision"]
+    H --> I["Keep"]
+    H --> J["Delete"]
+    H --> K["Quarantine"]
 ```
 
 > ⚠️ Files are not automatically deleted.
@@ -217,6 +200,29 @@ Hash → ABC123
 # 📏 Rule-Based Backup Decision
 
 Before AI is introduced, predefined rules are used.
+
+```mermaid
+flowchart TD
+    A["File Event"] --> B{"File Modified?"}
+
+    B -->|YES| C["Add to Backup Queue"]
+    B -->|NO| D{"Project Folder?"}
+
+    D -->|YES| E["High Priority"]
+    D -->|NO| F{"New File?"}
+
+    F -->|YES| G["Backup"]
+    F -->|NO| H["Ignore"]
+
+    C --> I["Backup Decision"]
+    E --> I
+    G --> I
+    H --> I
+
+    I --> J{"Duplicate?"}
+    J -->|YES| K["Mark Redundant"]
+    J -->|NO| L["Continue"]
+```
 
 ```text
 IF file is modified
@@ -246,20 +252,16 @@ Mark redundant
 
 The AI layer is added after the core system is functional.
 
-```text
-Linux
-  ↓
-File Events
-  ↓
-C System
-  ↓
-SQLite
-  ↓
-Python AI
-  │
-  ├──→ Backup Priority
-  ├──→ Anomaly Detection
-  └──→ Redundancy Analysis
+```mermaid
+flowchart TD
+    A["Linux"] --> B["File Events"]
+    B --> C["C System"]
+    C --> D["SQLite"]
+    D --> E["Python AI"]
+
+    E --> F["Backup Priority"]
+    E --> G["Anomaly Detection"]
+    E --> H["Redundancy Analysis"]
 ```
 
 ### AI Features
@@ -317,6 +319,16 @@ Large number of file changes
 Unusual activity pattern
 ```
 
+```mermaid
+flowchart TD
+    A["File Activity"] --> B["Collect Activity Data"]
+    B --> C["Python AI"]
+    C --> D{"Activity Pattern"}
+
+    D -->|Normal| E["NORMAL"]
+    D -->|Unusual| F["SUSPICIOUS ACTIVITY"]
+```
+
 Output:
 
 ```text
@@ -348,6 +360,25 @@ report_final_v2.pdf
 ```
 
 These files can be flagged as **potentially redundant** for user review.
+
+```mermaid
+flowchart TD
+    A["Files"] --> B["Analyze Metadata"]
+    B --> C["File Names"]
+    B --> D["Usage Frequency"]
+    B --> E["File Age"]
+    B --> F["File Type"]
+    B --> G["Content Similarity"]
+
+    C --> H["Redundancy Analysis"]
+    D --> H
+    E --> H
+    F --> H
+    G --> H
+
+    H --> I["Potentially Redundant"]
+    I --> J["User Review"]
+```
 
 ---
 
@@ -397,6 +428,34 @@ intelligent-file-backup-system/
 └── Makefile
 ```
 
+### Architecture Overview
+
+```mermaid
+flowchart TD
+    ROOT["intelligent-file-backup-system"]
+
+    ROOT --> SRC["src/"]
+    SRC --> MAIN["main.c"]
+    SRC --> FM["file_manager/"]
+    SRC --> BACKUP["backup/"]
+    SRC --> MON["monitoring/"]
+    SRC --> RED["redundancy/"]
+
+    ROOT --> DB["database/"]
+    DB --> SCHEMA["schema.sql"]
+    DB --> SYSTEM["system.db"]
+
+    ROOT --> AI["ai/"]
+    AI --> BP["backup_priority.py"]
+    AI --> AD["anomaly_detection.py"]
+    AI --> RA["redundancy_analysis.py"]
+
+    ROOT --> BACKUPS["backups/"]
+    ROOT --> TEST["test_files/"]
+    ROOT --> README["README.md"]
+    ROOT --> MAKE["Makefile"]
+```
+
 ---
 
 # 📊 Evaluation Metrics
@@ -421,6 +480,27 @@ intelligent-file-backup-system/
 ---
 
 # 🔄 Complete System Flow
+
+```mermaid
+flowchart TD
+    A["USER"] --> B["Configuration"]
+    B --> C["Full Backup"]
+    C --> D["SQLite Metadata"]
+    D --> E["inotify Monitoring"]
+    E --> F["File Event"]
+    F --> G["Rule Engine"]
+    G --> H["AI Analysis"]
+
+    H --> I["BACKUP"]
+    H --> J["QUEUE"]
+    H --> K["IGNORE"]
+    H --> L["ALERT"]
+
+    I --> M["Database Update"]
+    J --> M
+    K --> M
+    L --> M
+```
 
 ```text
 USER
@@ -453,6 +533,29 @@ AI Analysis
  │
  ▼
 Database Update
+```
+
+---
+
+# 🔗 Overall System Pipeline
+
+```mermaid
+flowchart LR
+    A["User"] --> B["Linux File System"]
+    B --> C["inotify"]
+    C --> D["C Core System"]
+    D --> E["Rule Engine"]
+    E --> F["SQLite"]
+
+    F --> G["Python AI"]
+
+    G --> H["Backup Priority"]
+    G --> I["Anomaly Detection"]
+    G --> J["Redundancy Analysis"]
+
+    H --> K["Backup / Queue"]
+    I --> L["Alert"]
+    J --> M["User Review"]
 ```
 
 ---

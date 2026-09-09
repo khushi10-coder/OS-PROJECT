@@ -1,6 +1,6 @@
 # 🔐 Intelligent File Backup & Management System
 
-> **A Linux-based intelligent file management system for automated backup, real-time monitoring, duplicate detection, file classification, and AI-based analysis.**
+> **A Linux-based intelligent file management system for automated backup, real-time monitoring, file classification, duplicate detection, and future AI-based analysis.**
 
 ![Linux](https://img.shields.io/badge/OS-Linux-FCC624?logo=linux\&logoColor=black)
 ![C](https://img.shields.io/badge/Core-C-A8B9CC)
@@ -16,17 +16,39 @@ Build a **local, offline Linux system** that automatically:
 * 💾 Performs full and incremental backups
 * 👀 Monitors file activity in real time
 * 🗂️ Classifies files by type
-* ⭐ Prioritizes important project folders
+* 📅 Filters files based on modification date
+* 👻 Ignores hidden files
+* ⭐ Supports important project folders
 * ♻️ Detects duplicate and redundant files
-* 🤖 Uses AI for intelligent backup and anomaly analysis
+* 🤖 Provides AI-based analysis in future phases
+
+The project is being developed incrementally, starting with the **core Linux backup system in C** and gradually adding deduplication, database support, and AI capabilities.
 
 ### Development Phases
 
 ```mermaid
 flowchart TD
-    A["PHASE 1: CORE LINUX SYSTEM<br/>C + Linux + SQLite + inotify"]
-    --> B["PHASE 2: AI INTELLIGENCE<br/>Python + ML + Analysis"]
+    A["PHASE 1: CORE LINUX SYSTEM<br/>C + Linux + File I/O"]
+    --> B["PHASE 2: REAL-TIME MONITORING<br/>inotify"]
+
+    B --> C["PHASE 3: DEDUPLICATION<br/>SHA-256"]
+
+    C --> D["PHASE 4: DATABASE<br/>SQLite"]
+
+    D --> E["PHASE 5: AI INTELLIGENCE<br/>Python + ML"]
 ```
+
+### Current Status
+
+| Phase                           | Status      |
+| ------------------------------- | ----------- |
+| Core Backup System              | ✅ Completed |
+| File Filtering & Classification | ✅ Completed |
+| Incremental Backup              | ✅ Completed |
+| Real-Time Monitoring            | ✅ Completed |
+| SHA-256 Deduplication           | 🔜 Next     |
+| SQLite Integration              | 🔜 Planned  |
+| AI Analysis                     | 🔜 Planned  |
 
 ---
 
@@ -34,7 +56,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    U["USER"] --> CLI["CLI / MENU"]
+    U["USER"] --> CLI["CLI / PROGRAM"]
 
     CLI --> CORE["CORE C SYSTEM"]
 
@@ -42,38 +64,58 @@ flowchart TD
     CORE --> BE["Backup Engine"]
     CORE --> MON["File Monitoring"]
     CORE --> FC["File Classification"]
-    CORE --> DD["Duplicate Detection"]
 
     FM --> FS["Linux File System"]
     BE --> FS
     MON --> IN["inotify"]
-    DD --> SHA["SHA-256"]
 
-    IN --> DB["SQLite"]
-    SHA --> DB
+    IN --> EVT["Filesystem Events"]
 
-    DB --> AI["AI LAYER<br/>Python"]
+    EVT --> CREATE["CREATE"]
+    EVT --> MODIFY["MODIFY"]
+    EVT --> DELETE["DELETE"]
+    EVT --> MOVEIN["MOVE IN"]
+    EVT --> MOVEOUT["MOVE OUT"]
 
-    AI --> BP["Backup Priority"]
-    AI --> AD["Anomaly Detection"]
-    AI --> RA["Redundancy Analysis"]
+    CREATE --> PROC["Process File"]
+    MODIFY --> PROC
+    MOVEIN --> PROC
+
+    DELETE --> DET["Detection"]
+    MOVEOUT --> DET
+
+    PROC --> FC
+    FC --> BE
+
+    BE --> BACKUP["Backup Storage"]
+
+    BACKUP -.-> SHA["Future: SHA-256"]
+    SHA -.-> DB["Future: SQLite"]
+    DB -.-> AI["Future: Python AI"]
+
+    AI -.-> BP["Backup Priority"]
+    AI -.-> AD["Anomaly Detection"]
+    AI -.-> RA["Redundancy Analysis"]
 ```
 
 ---
 
 # ⚙️ Core Modules
 
-| Module                 | Function                                                  |
-| ---------------------- | --------------------------------------------------------- |
-| 📁 File Manager        | Create, read, write, copy, move and delete files          |
-| 💾 Full Backup         | Initial backup of all selected files                      |
-| 🔄 Incremental Backup  | Backup only new or modified files                         |
-| 👀 Monitoring          | Detect file creation, modification, deletion and movement |
-| 🗂️ Classification     | Categorize files by extension                             |
-| ⭐ Project Registry     | Mark important folders as high priority                   |
-| ♻️ Duplicate Detection | Detect identical files using SHA-256                      |
-| 🗄️ SQLite             | Store file and backup metadata                            |
-| 🤖 AI Layer            | Analyze backup priority, anomalies and redundancy         |
+| Module                 | Function                                      |
+| ---------------------- | --------------------------------------------- |
+| 📁 File Manager        | Handles directory and file operations         |
+| 💾 Full Backup         | Performs the initial backup                   |
+| 🔄 Incremental Backup  | Backs up only new or modified files           |
+| 👀 Monitoring          | Detects filesystem changes using `inotify`    |
+| 🗂️ Classification     | Categorizes files by extension                |
+| 👻 Hidden File Filter  | Skips hidden files                            |
+| 📅 Date Filter         | Processes files based on modification date    |
+| 📦 File Copy           | Copies files using low-level Linux I/O        |
+| ⭐ Project Registry     | Planned support for important project folders |
+| ♻️ Duplicate Detection | Planned SHA-256 based duplicate detection     |
+| 🗄️ SQLite             | Planned metadata storage                      |
+| 🤖 AI Layer            | Planned intelligent analysis                  |
 
 ---
 
@@ -81,35 +123,46 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["START"] --> B["Select Source"]
-    B --> C["Select Backup Location"]
-    C --> D["Full Backup"]
-    D --> E["Store Metadata"]
-    E --> F["Monitor Changes"]
-    F --> G{"New / Modified File?"}
-    G -->|YES| H["BACKUP"]
-    G -->|NO| I["IGNORE"]
+    A["START"] --> B["Source Directory"]
+    B --> C["Initial Directory Scan"]
+
+    C --> D["Hidden File Filter"]
+    D --> E["Date Filter"]
+    E --> F["Extension Detection"]
+    F --> G["File Classification"]
+
+    G --> H{"Backup Required?"}
+
+    H -->|YES| I["Copy File"]
+    H -->|NO| J["IGNORE"]
+
+    I --> K["Backup Directory"]
+    J --> K
+
+    K --> L["Start Real-Time Monitoring"]
 ```
 
 ### Backup Types
 
-| Type                   | Description                       |
-| ---------------------- | --------------------------------- |
-| **Full Backup**        | Copies all selected files         |
-| **Incremental Backup** | Copies only new or modified files |
-| **Restore**            | Recovers files from backup        |
+| Type                   | Description                                        |
+| ---------------------- | -------------------------------------------------- |
+| **Full Backup**        | Copies all eligible files during the initial scan  |
+| **Incremental Backup** | Copies only new or modified files                  |
+| **Real-Time Backup**   | Automatically processes relevant filesystem events |
+| **Restore**            | 🔜 Planned future feature                          |
 
 ---
 
 # 👀 Real-Time File Monitoring
 
-The system uses Linux **`inotify`** to monitor selected directories.
+The system uses Linux **`inotify`** to monitor the source directory for filesystem changes.
 
 ```mermaid
 flowchart LR
     A["File Event"] --> B["inotify"]
     B --> C["C Monitor"]
-    C --> D["Backup Decision"]
+    C --> D["Event Handler"]
+    D --> E["Backup Decision"]
 ```
 
 ### Monitored Events
@@ -118,8 +171,21 @@ flowchart LR
 CREATE
 MODIFY
 DELETE
-MOVE
+MOVE IN
+MOVE OUT
 ```
+
+### Event Handling
+
+| Event           | Current Action            |
+| --------------- | ------------------------- |
+| `IN_CREATE`     | Process and backup file   |
+| `IN_MODIFY`     | Process and update backup |
+| `IN_MOVED_TO`   | Process and backup file   |
+| `IN_DELETE`     | Detect and display event  |
+| `IN_MOVED_FROM` | Detect and display event  |
+
+> Currently, DELETE and MOVE OUT are **detection-only events**. The corresponding backup is not automatically removed.
 
 ---
 
@@ -129,15 +195,13 @@ Files are categorized according to their extensions.
 
 | Extension               | Category      |
 | ----------------------- | ------------- |
-| `.pdf`                  | PDF Document  |
-| `.docx`                 | Word Document |
-| `.pptx`                 | Presentation  |
-| `.xlsx`                 | Spreadsheet   |
+| `.pdf`, `.PDF`          | PDF Document  |
+| `.doc`, `.docx`         | Word Document |
+| `.ppt`, `.pptx`         | Presentation  |
+| `.xls`, `.xlsx`         | Spreadsheet   |
 | `.jpg`, `.jpeg`, `.png` | Image         |
 | `.xml`                  | XML / Data    |
-| `.txt`                  | Text          |
-| `.c`                    | Source Code   |
-| Unknown                 | Other         |
+| Other / No Extension    | Other         |
 
 ### Classification Flow
 
@@ -149,37 +213,111 @@ flowchart TD
     C -->|YES| D["Assign Category"]
     C -->|NO| E["Other"]
 
-    D --> F["Store Classification"]
+    D --> F["Backup Category"]
     E --> F
+```
+
+The current implementation uses:
+
+```c
+strrchr()
+```
+
+to find the file extension and:
+
+```c
+strcmp()
+```
+
+to identify the appropriate category.
+
+---
+
+# 📅 Date Filtering
+
+The system allows the user to provide a **minimum modification date**.
+
+```text
+YYYY-MM-DD
+```
+
+Only files modified on or after the selected date are processed.
+
+### Example
+
+```text
+Selected Date: 2026-09-09
+
+old.pdf      → 2026-09-01 → SKIPPED
+report.pdf   → 2026-09-09 → BACKED UP
+new.jpg      → 2026-09-10 → BACKED UP
+```
+
+The file modification time is obtained using:
+
+```c
+stat()
+```
+
+---
+
+# 👻 Hidden File Filtering
+
+Hidden files are ignored during processing.
+
+The system checks whether the filename starts with:
+
+```c
+.
+```
+
+Example:
+
+```text
+.hidden.txt
+.secret.pdf
+.config
+```
+
+Result:
+
+```text
+SKIPPED: .hidden.txt (Hidden File)
 ```
 
 ---
 
 # ⭐ Project Folder Registry
 
-Users can mark important folders for special treatment.
+Important project folders can be given special treatment in the future.
+
+Example:
 
 ```text
 /home/user/Projects/OS_Project
 /home/user/Projects/Final_Year_Project
 ```
 
-| Setting          | Value   |
-| ---------------- | ------- |
-| Priority         | HIGH    |
-| Backup Frequency | HIGH    |
-| Monitoring       | ENABLED |
+| Setting          | Planned Value |
+| ---------------- | ------------- |
+| Priority         | HIGH          |
+| Backup Frequency | HIGH          |
+| Monitoring       | ENABLED       |
+
+> ⭐ Project-folder prioritization is part of the planned intelligent layer and is not currently used by the core `main.c` implementation.
 
 ---
 
 # ♻️ Duplicate Detection
 
-Exact duplicate files are detected using **SHA-256 hashes**.
+The next major feature is **content-based duplicate detection**.
+
+Exact duplicate files will be identified using **SHA-256 hashes**.
 
 ```mermaid
 flowchart TD
-    A["report.pdf"] --> B["SHA-256 Hash"]
-    C["report_copy.pdf"] --> D["SHA-256 Hash"]
+    A["File A"] --> B["SHA-256 Hash"]
+    C["File B"] --> D["SHA-256 Hash"]
 
     B --> E{"Same Hash?"}
     D --> E
@@ -187,76 +325,96 @@ flowchart TD
     E -->|YES| F["DUPLICATE DETECTED"]
     E -->|NO| G["Unique File"]
 
-    F --> H["User Decision"]
-    H --> I["Keep"]
-    H --> J["Delete"]
-    H --> K["Quarantine"]
+    F --> H["Mark Duplicate"]
+    H --> I["User Decision"]
 ```
 
-> ⚠️ Files are not automatically deleted.
+Example:
+
+```text
+report.pdf
+report_copy.pdf
+```
+
+If:
+
+```text
+SHA-256(report.pdf)
+        =
+SHA-256(report_copy.pdf)
+```
+
+the files can be identified as duplicates.
+
+> ⚠️ Files will not be automatically deleted. Duplicate files will first be identified for user review.
 
 ---
 
 # 📏 Rule-Based Backup Decision
 
-Before AI is introduced, predefined rules are used.
+The current backup system uses predefined rules before introducing AI.
 
 ```mermaid
 flowchart TD
-    A["File Event"] --> B{"File Modified?"}
+    A["File Event"] --> B{"Hidden File?"}
 
-    B -->|YES| C["Add to Backup Queue"]
-    B -->|NO| D{"Project Folder?"}
+    B -->|YES| C["IGNORE"]
+    B -->|NO| D{"Passes Date Filter?"}
 
-    D -->|YES| E["High Priority"]
-    D -->|NO| F{"New File?"}
+    D -->|NO| C
+    D -->|YES| E["Classify File"]
 
-    F -->|YES| G["Backup"]
-    F -->|NO| H["Ignore"]
+    E --> F{"Backup Exists?"}
 
-    C --> I["Backup Decision"]
-    E --> I
-    G --> I
-    H --> I
+    F -->|NO| G["BACKUP"]
+    F -->|YES| H{"Source Newer?"}
 
-    I --> J{"Duplicate?"}
-    J -->|YES| K["Mark Redundant"]
-    J -->|NO| L["Continue"]
+    H -->|YES| G
+    H -->|NO| C
+
+    G --> I["Backup Complete"]
 ```
 
+### Current Rules
+
 ```text
-IF file is modified
-        ↓
-Add to backup queue
-
-IF file belongs to project folder
-        ↓
-High priority
-
-IF file is newly created
-        ↓
-Backup
-
-IF file is unchanged
+IF file is hidden
         ↓
 Ignore
 
-IF duplicate detected
+IF file fails date filter
         ↓
-Mark redundant
+Ignore
+
+IF file has valid category
+        ↓
+Classify
+
+IF backup does not exist
+        ↓
+Backup
+
+IF source is newer than backup
+        ↓
+Update Backup
+
+IF source is unchanged
+        ↓
+Ignore
 ```
 
 ---
 
 # 🤖 AI Layer
 
-The AI layer is added after the core system is functional.
+The AI layer will be added **after the core backup, monitoring, deduplication, and database systems are functional**.
 
 ```mermaid
 flowchart TD
     A["Linux"] --> B["File Events"]
     B --> C["C System"]
     C --> D["SQLite"]
+
     D --> E["Python AI"]
 
     E --> F["Backup Priority"]
@@ -272,15 +430,17 @@ flowchart TD
 | 🚨 Anomaly Detection   | Detect unusual file activity         |
 | ♻️ Redundancy Analysis | Identify potentially redundant files |
 
+> 🤖 These AI features are **planned**, not part of the current core implementation.
+
 ---
 
 # 🧠 Intelligent Backup Priority
 
-AI analyzes:
+The future AI system can analyze:
 
-* File access frequency
-* Modification frequency
-* Last usage
+* File modification frequency
+* File usage frequency
+* Last modification time
 * Project-folder status
 * File type
 * Previous backup history
@@ -290,9 +450,9 @@ AI analyzes:
 ```text
 main.c
 
-Access Count: 100
-Modification Count: 40
+Modification Frequency: HIGH
 Project Folder: YES
+Recent Activity: HIGH
 
 Result:
 Importance = HIGH
@@ -303,15 +463,17 @@ Backup Priority = HIGH
 
 # 🚨 Anomaly Detection
 
+The future AI layer can identify unusual filesystem activity.
+
 ### Normal Activity
 
 ```text
-20–30 files/day
-Normal access hours
-Regular file modifications
+20–30 file changes/day
+Regular modifications
+Normal activity pattern
 ```
 
-### Unusual Activity
+### Potentially Unusual Activity
 
 ```text
 Hundreds of files modified rapidly
@@ -322,11 +484,13 @@ Unusual activity pattern
 ```mermaid
 flowchart TD
     A["File Activity"] --> B["Collect Activity Data"]
-    B --> C["Python AI"]
-    C --> D{"Activity Pattern"}
+    B --> C["SQLite"]
+    C --> D["Python AI"]
 
-    D -->|Normal| E["NORMAL"]
-    D -->|Unusual| F["SUSPICIOUS ACTIVITY"]
+    D --> E{"Activity Pattern"}
+
+    E -->|Normal| F["NORMAL"]
+    E -->|Unusual| G["SUSPICIOUS ACTIVITY"]
 ```
 
 Output:
@@ -341,14 +505,15 @@ SUSPICIOUS ACTIVITY
 
 # ♻️ Smart Redundancy Analysis
 
-AI can analyze:
+The future AI system can analyze:
 
 ```text
 Similar file names
-Usage frequency
 File age
 File type
-Content similarity (future improvement)
+Usage frequency
+SHA-256 hash
+Content similarity (future)
 ```
 
 Example:
@@ -364,11 +529,12 @@ These files can be flagged as **potentially redundant** for user review.
 ```mermaid
 flowchart TD
     A["Files"] --> B["Analyze Metadata"]
+
     B --> C["File Names"]
-    B --> D["Usage Frequency"]
-    B --> E["File Age"]
-    B --> F["File Type"]
-    B --> G["Content Similarity"]
+    B --> D["File Age"]
+    B --> E["File Type"]
+    B --> F["Usage Frequency"]
+    B --> G["SHA-256 Hash"]
 
     C --> H["Redundancy Analysis"]
     D --> H
@@ -384,23 +550,48 @@ flowchart TD
 
 # 🛠️ Technology Stack
 
-| Component         | Technology                 |
-| ----------------- | -------------------------- |
-| Operating System  | Linux / Ubuntu             |
-| Core Language     | C                          |
-| Linux Integration | POSIX / Linux System Calls |
-| File Monitoring   | inotify                    |
-| Database          | SQLite                     |
-| Hashing           | SHA-256                    |
-| AI Language       | Python                     |
-| Machine Learning  | Scikit-learn               |
-| Data Processing   | Pandas / NumPy             |
-| Interface         | Command Line               |
-| Version Control   | Git / GitHub               |
+### Current
+
+| Component          | Technology                                  |
+| ------------------ | ------------------------------------------- |
+| Operating System   | Linux / Ubuntu                              |
+| Environment        | WSL                                         |
+| Core Language      | C                                           |
+| Compiler           | GCC                                         |
+| Linux Integration  | POSIX / Linux System Calls                  |
+| File Monitoring    | `inotify`                                   |
+| Directory Handling | `opendir()` / `readdir()`                   |
+| File Metadata      | `stat()`                                    |
+| File I/O           | `open()` / `read()` / `write()` / `close()` |
+| Interface          | Command Line                                |
+| Version Control    | Git / GitHub                                |
+
+### Planned
+
+| Component        | Technology     |
+| ---------------- | -------------- |
+| Hashing          | SHA-256        |
+| Database         | SQLite         |
+| AI Language      | Python         |
+| Machine Learning | Scikit-learn   |
+| Data Processing  | Pandas / NumPy |
 
 ---
 
 # 📂 Project Structure
+
+### Current Structure
+
+```text
+intelligent-file-backup-system/
+│
+├── main.c
+├── README.md
+│
+└── test_files/
+```
+
+### Planned Structure
 
 ```text
 intelligent-file-backup-system/
@@ -410,7 +601,7 @@ intelligent-file-backup-system/
 │   ├── file_manager/
 │   ├── backup/
 │   ├── monitoring/
-│   └── redundancy/
+│   └── deduplication/
 │
 ├── database/
 │   ├── schema.sql
@@ -435,11 +626,12 @@ flowchart TD
     ROOT["intelligent-file-backup-system"]
 
     ROOT --> SRC["src/"]
+
     SRC --> MAIN["main.c"]
     SRC --> FM["file_manager/"]
     SRC --> BACKUP["backup/"]
     SRC --> MON["monitoring/"]
-    SRC --> RED["redundancy/"]
+    SRC --> RED["deduplication/"]
 
     ROOT --> DB["database/"]
     DB --> SCHEMA["schema.sql"]
@@ -460,22 +652,24 @@ flowchart TD
 
 # 📊 Evaluation Metrics
 
-| Metric         | Objective                |
-| -------------- | ------------------------ |
-| Backup Size    | Reduce storage           |
-| Backup Time    | Reduce backup time       |
-| Restore Time   | Enable fast recovery     |
-| I/O Overhead   | Minimize unnecessary I/O |
-| Detection Rate | Detect unusual behavior  |
+| Metric              | Objective                          |
+| ------------------- | ---------------------------------- |
+| Backup Size         | Reduce unnecessary storage         |
+| Backup Time         | Reduce backup time                 |
+| Restore Time        | Enable fast recovery               |
+| I/O Overhead        | Minimize unnecessary I/O           |
+| Detection Time      | Detect changes quickly             |
+| Duplicate Detection | Correctly identify duplicate files |
+| Anomaly Detection   | Identify unusual activity          |
 
 ### Full vs Incremental Backup
 
-| Feature      | Full Backup | Incremental Backup |
-| ------------ | ----------- | ------------------ |
-| Files Copied | All         | New / Modified     |
-| Storage      | High        | Low                |
-| Time         | High        | Lower              |
-| I/O          | High        | Optimized          |
+| Feature      | Full Backup        | Incremental Backup |
+| ------------ | ------------------ | ------------------ |
+| Files Copied | All eligible files | New / Modified     |
+| Storage      | High               | Lower              |
+| Time         | Higher             | Lower              |
+| I/O          | High               | Optimized          |
 
 ---
 
@@ -483,56 +677,92 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["USER"] --> B["Configuration"]
-    B --> C["Full Backup"]
-    C --> D["SQLite Metadata"]
-    D --> E["inotify Monitoring"]
-    E --> F["File Event"]
-    F --> G["Rule Engine"]
-    G --> H["AI Analysis"]
+    A["USER"] --> B["C PROGRAM"]
 
-    H --> I["BACKUP"]
-    H --> J["QUEUE"]
-    H --> K["IGNORE"]
-    H --> L["ALERT"]
+    B --> C["Initial Backup"]
 
-    I --> M["Database Update"]
-    J --> M
-    K --> M
-    L --> M
+    C --> D["File Filtering"]
+    D --> E["File Classification"]
+    E --> F["Incremental Check"]
+    F --> G["Backup Storage"]
+
+    G --> H["inotify Monitoring"]
+
+    H --> I["File Event"]
+
+    I --> J{"Event Type"}
+
+    J -->|CREATE| K["Process File"]
+    J -->|MODIFY| K
+    J -->|MOVE IN| K
+
+    J -->|DELETE| L["Detect"]
+    J -->|MOVE OUT| L
+
+    K --> G
+    L --> H
+
+    G -.-> M["SHA-256"]
+    M -.-> N["SQLite"]
+    N -.-> O["Python AI"]
+
+    O --> P["Priority"]
+    O --> Q["Anomaly Detection"]
+    O --> R["Redundancy Analysis"]
 ```
 
 ```text
 USER
  │
  ▼
-Configuration
+C PROGRAM
  │
  ▼
-Full Backup
+Initial Backup
  │
- ▼
-SQLite Metadata
+ ├──→ File Filtering
  │
- ▼
-inotify Monitoring
+ ├──→ File Classification
  │
- ▼
-File Event
- │
- ▼
-Rule Engine
- │
- ▼
-AI Analysis
- │
- ├──→ BACKUP
- ├──→ QUEUE
- ├──→ IGNORE
- └──→ ALERT
- │
- ▼
-Database Update
+ └──→ Incremental Check
+          │
+          ▼
+     Backup Storage
+          │
+          ▼
+    inotify Monitoring
+          │
+          ▼
+      File Event
+          │
+    ┌─────┼─────┐
+    ▼     ▼     ▼
+ CREATE MODIFY MOVE IN
+    │     │     │
+    └─────┼─────┘
+          ▼
+      Process File
+
+DELETE / MOVE OUT
+          │
+          ▼
+       Detect
+
+Future:
+Backup Storage
+      │
+      ▼
+   SHA-256
+      │
+      ▼
+   SQLite
+      │
+      ▼
+  Python AI
+      │
+ ┌────┼────────────┐
+ ▼    ▼            ▼
+Priority  Anomaly  Redundancy
 ```
 
 ---
@@ -542,20 +772,194 @@ Database Update
 ```mermaid
 flowchart LR
     A["User"] --> B["Linux File System"]
-    B --> C["inotify"]
-    C --> D["C Core System"]
-    D --> E["Rule Engine"]
-    E --> F["SQLite"]
+    B --> C["C Core System"]
 
-    F --> G["Python AI"]
+    C --> D["File Filtering"]
+    D --> E["Classification"]
+    E --> F["Incremental Backup"]
 
-    G --> H["Backup Priority"]
-    G --> I["Anomaly Detection"]
-    G --> J["Redundancy Analysis"]
+    C --> G["inotify"]
+    G --> H["Real-Time Events"]
 
-    H --> K["Backup / Queue"]
-    I --> L["Alert"]
-    J --> M["User Review"]
+    F --> I["Backup Storage"]
+    H --> I
+
+    I -.-> J["Future: SHA-256"]
+    J -.-> K["Future: SQLite"]
+    K -.-> L["Future: Python AI"]
+
+    L --> M["Backup Priority"]
+    L --> N["Anomaly Detection"]
+    L --> O["Redundancy Analysis"]
+```
+
+---
+
+# ▶️ How to Run
+
+### 1. Open the project directory
+
+```bash
+cd ~/intelligent-file-backup-system
+```
+
+### 2. Compile
+
+```bash
+gcc main.c -o backup_system
+```
+
+### 3. Run
+
+```bash
+./backup_system
+```
+
+The program asks:
+
+```text
+Enter minimum modification date (YYYY-MM-DD):
+```
+
+Example:
+
+```text
+2026-09-09
+```
+
+After the initial backup:
+
+```text
+========================================
+REAL-TIME FILE MONITORING STARTED
+========================================
+```
+
+The program will continue monitoring the source directory.
+
+Press:
+
+```text
+Ctrl + C
+```
+
+to stop monitoring.
+
+---
+
+# 📋 Current Feature Status
+
+| Feature                            | Status    |
+| ---------------------------------- | --------- |
+| 📂 Initial Directory Scanning      | ✅         |
+| 📅 Date Filtering                  | ✅         |
+| 👻 Hidden File Filtering           | ✅         |
+| 🗂️ Extension-Based Classification | ✅         |
+| 💾 Full Backup                     | ✅         |
+| 🔄 Incremental Backup              | ✅         |
+| 📦 Low-Level File Copy             | ✅         |
+| ⚡ Real-Time Monitoring             | ✅         |
+| ➕ CREATE Detection                 | ✅         |
+| ✏️ MODIFY Detection                | ✅         |
+| 🗑️ DELETE Detection               | ✅         |
+| 📥 MOVE IN Detection               | ✅         |
+| 📤 MOVE OUT Detection              | ✅         |
+| 🗑️ Delete Backup Removal          | 🔜        |
+| 📤 Move-Out Backup Removal         | 🔜        |
+| ♻️ SHA-256 Deduplication           | 🔜        |
+| 🗄️ SQLite Metadata                | 🔜        |
+| 🤖 AI Analysis                     | 🔜        |
+| 📊 GUI                             | 🔮 Future |
+
+---
+
+# 🔮 Future Enhancements
+
+* ♻️ Content-based file deduplication
+* 🗄️ SQLite metadata management
+* ♻️ File restore functionality
+* 📝 Backup history and logging
+* 🗜️ File compression
+* 🔐 Backup encryption
+* 📊 Backup statistics
+* ⭐ Intelligent project-folder prioritization
+* 🚨 AI-based anomaly detection
+* 🤖 AI-based backup priority
+* ♻️ Smart redundancy analysis
+* 🖥️ Graphical User Interface
+
+---
+
+# 🎯 Project Progress
+
+### Phase 1 — Core Linux Backup ✅
+
+```text
+Directory Scanning
+       ↓
+Hidden File Filtering
+       ↓
+Date Filtering
+       ↓
+File Classification
+       ↓
+Incremental Backup
+       ↓
+Low-Level File Copy
+```
+
+### Phase 2 — Real-Time Monitoring ✅
+
+```text
+inotify
+   │
+   ├── CREATE    → Automatic Backup
+   ├── MODIFY    → Automatic Backup
+   ├── MOVE IN   → Automatic Backup
+   ├── DELETE    → Detection
+   └── MOVE OUT  → Detection
+```
+
+### Phase 3 — Deduplication 🔜
+
+```text
+File
+ ↓
+SHA-256 Hash
+ ↓
+Compare Hash
+ ↓
+Duplicate?
+ ├── YES → Mark Duplicate
+ └── NO  → Store Hash
+```
+
+### Phase 4 — SQLite 🔜
+
+```text
+File Metadata
+      ↓
+Backup Information
+      ↓
+File Hashes
+      ↓
+Activity Data
+      ↓
+SQLite Database
+```
+
+### Phase 5 — AI 🔜
+
+```text
+SQLite
+   ↓
+Python
+   ↓
+Machine Learning
+   │
+   ├──→ Backup Priority
+   ├──→ Anomaly Detection
+   └──→ Redundancy Analysis
 ```
 
 ---
@@ -563,7 +967,37 @@ flowchart LR
 # ⭐ Project in One Line
 
 ```text
-Linux + C + inotify + SQLite + Backup + SHA-256 + AI
-                         ↓
-          🔐 Intelligent File Management
+Linux + C + inotify + Backup + Classification
+                    ↓
+       SHA-256 + SQLite + AI
+                    ↓
+     🔐 Intelligent File Management
 ```
+
+---
+
+# 👥 For the Team
+
+```text
+WHAT WE HAVE
+     ↓
+C + Linux
+     ↓
+Backup + Filtering
+     ↓
+File Classification
+     ↓
+Incremental Backup
+     ↓
+inotify Monitoring
+     ↓
+WHAT WE BUILD NEXT
+     ↓
+SHA-256 Deduplication
+     ↓
+SQLite
+     ↓
+Python + AI
+```
+
+> **Core principle:** First build a reliable Linux backup system, then add deduplication, database management, and AI intelligence step by step.
